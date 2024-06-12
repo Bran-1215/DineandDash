@@ -103,12 +103,12 @@ class Platformer extends Phaser.Scene {
             if (obj2.visible) {
                 obj2.visible = false;
                 if (obj2.name == "burger") {
-                    this.sound.play("key");
+                    this.sound.play("burger");
                     this.foodScore += 50;
                     this.timeLimit += 100;
                 }
                 else {
-                    this.sound.play("gem");
+                    this.sound.play("pizza");
                 this.foodScore += 10;
                 this.timeLimit += 20;
                 }
@@ -124,6 +124,7 @@ class Platformer extends Phaser.Scene {
         // Inputs
         cursors = this.input.keyboard.createCursorKeys();
         this.SpaceKey = this.input.keyboard.addKey('SPACE');
+        this.CKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C)
 
 
         // Movement VFX
@@ -166,6 +167,10 @@ class Platformer extends Phaser.Scene {
         my.sprite.EndScreen.scale = 0.5;
         my.sprite.EndScreen.visible = false;
 
+        my.sprite.CreditScreen = this.add.sprite(360, 225, "Credit");
+        my.sprite.CreditScreen.scale = 0.5;
+        my.sprite.CreditScreen.visible = false;
+
         my.text.score = this.add.text(280, 120, this.foodScore, { fontSize: 36, color: "black", fontweight: "bold" })
         my.text.score.setStroke('black', 3);
         my.text.score.visible = false;
@@ -181,9 +186,16 @@ class Platformer extends Phaser.Scene {
     }
 
     update() {
+        // Show credits
+        if(my.sprite.TitleScreen.visible && this.CKey.isDown) {
+            my.sprite.CreditScreen.visible = true;
+        }
+        else {
+            my.sprite.CreditScreen.visible = false;
+        }
         if (this.playMode) {
             // Time Limit Decay
-            this.timeLimit -= 0.075;
+            this.timeLimit -= 0.08;
             // Allows HUD elements to follow the camera
             this.timeBar.setPosition(this.cameras.main.scrollX + 300, this.cameras.main.scrollY + 10);
             my.text.wave.setPosition(this.cameras.main.scrollX, this.cameras.main.scrollY + 10);
@@ -195,6 +207,7 @@ class Platformer extends Phaser.Scene {
             // Checks if all the food is eaten to end the wave
             if (this.allFoodEaten()) {
                 this.waveCount++;
+                this.sound.play("waveComplete");
                 my.text.wave.setText("Wave:" + this.waveCount);
                 this.spawnFood();
 
@@ -216,6 +229,11 @@ class Platformer extends Phaser.Scene {
             my.text.scoreHUD.visible = false;
             my.sprite.EndScreen.visible = true;
             my.text.score.visible = true;
+        }
+
+        // Limit the time limit
+        if (this.timeLimit > 350) {
+            this.timeLimit = 350;
         }
 
 

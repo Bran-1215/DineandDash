@@ -40,11 +40,13 @@ class Load extends Phaser.Scene {
 
         this.load.image("Title", "TitleScreen.jpg");
         this.load.image("End", "EndScreen.jpg");
+        this.load.image("Credit", "CreditScreen.jpg");
 
         this.load.audio("jump", "jumping.ogg");
         this.load.audio("pizza", "pizzaCollect.ogg");
         this.load.audio("burger", "burgerCollect.ogg");
         this.load.audio("noTime", "outOfTime.ogg");
+        this.load.audio("waveComplete", "waveComplete.ogg");
     }
 
     create() {
