@@ -104,15 +104,16 @@ class Platformer extends Phaser.Scene {
                 obj2.visible = false;
                 if (obj2.name == "burger") {
                     this.sound.play("key");
-                    this.foodScore += 100;
+                    this.foodScore += 50;
                     this.timeLimit += 100;
                 }
                 else {
                     this.sound.play("gem");
-                this.foodScore += 20;
+                this.foodScore += 10;
                 this.timeLimit += 20;
                 }
                 my.text.score.setText(this.foodScore);
+                my.text.scoreHUD.setText("Score:" + this.foodScore);
             }
         });
 
@@ -168,17 +169,28 @@ class Platformer extends Phaser.Scene {
         my.text.score.setStroke('black', 3);
         my.text.score.visible = false;
 
+        my.text.wave = this.add.text(0, 0, "Wave:" + this.waveCount, { fontSize: 24, color: "black", fontweight: "bold" })
+        my.text.wave.visible = false;
+
+        my.text.scoreHUD = this.add.text(0, 0, "Score:" + this.foodScore, { fontSize: 24, color: "black", fontweight: "bold" })
+        my.text.scoreHUD.visible = false;
+
 
 
     }
 
     update() {
         if (this.playMode) {
-            this.timeLimit -= 1.065;
+            this.timeLimit -= 0.075;
             this.timeBar.setPosition(this.cameras.main.scrollX + 300, this.cameras.main.scrollY + 10);
+            my.text.wave.setPosition(this.cameras.main.scrollX, this.cameras.main.scrollY + 10);
+            my.text.wave.visible = true;
+            my.text.scoreHUD.setPosition(this.cameras.main.scrollX + 125, this.cameras.main.scrollY + 10);
+            my.text.scoreHUD.visible = true;
             this.drawBar();
             if (this.allFoodEaten()) {
                 this.waveCount++;
+                my.text.wave.setText("Wave:" + this.waveCount);
                 this.spawnFood();
 
             }
@@ -195,6 +207,8 @@ class Platformer extends Phaser.Scene {
             this.timeLimit = 1;
             my.sprite.player.setPosition(150, 375);
             this.playMode = false;
+            my.text.wave.visible = false;
+            my.text.scoreHUD.visible = false;
             my.sprite.EndScreen.visible = true;
             my.text.score.visible = true;
         }
@@ -335,5 +349,4 @@ class Platformer extends Phaser.Scene {
         });
         return allNotVisible;
     }
-
 }
