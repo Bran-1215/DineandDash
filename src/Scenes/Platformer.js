@@ -5,7 +5,7 @@ class Platformer extends Phaser.Scene {
         this.foodScore = 0;
         this.playMode = false;
         this.timeLimit = 200;
-        this.waveCount = 0;
+        this.waveCount = 1;
     }
 
     init() {
@@ -117,6 +117,7 @@ class Platformer extends Phaser.Scene {
             }
         });
 
+        // Begins Wave 1
         this.spawnFood();
 
 
@@ -181,13 +182,17 @@ class Platformer extends Phaser.Scene {
 
     update() {
         if (this.playMode) {
+            // Time Limit Decay
             this.timeLimit -= 0.075;
+            // Allows HUD elements to follow the camera
             this.timeBar.setPosition(this.cameras.main.scrollX + 300, this.cameras.main.scrollY + 10);
             my.text.wave.setPosition(this.cameras.main.scrollX, this.cameras.main.scrollY + 10);
             my.text.wave.visible = true;
             my.text.scoreHUD.setPosition(this.cameras.main.scrollX + 125, this.cameras.main.scrollY + 10);
             my.text.scoreHUD.visible = true;
+            // Updates the time limit bar
             this.drawBar();
+            // Checks if all the food is eaten to end the wave
             if (this.allFoodEaten()) {
                 this.waveCount++;
                 my.text.wave.setText("Wave:" + this.waveCount);
@@ -201,7 +206,7 @@ class Platformer extends Phaser.Scene {
         if (this.timeLimit < 0) {
             let gameOverNoise = true;
             if (gameOverNoise) {
-                this.sound.play("door");
+                this.sound.play("noTime");
                 gameOverNoise = false;
             }
             this.timeLimit = 1;

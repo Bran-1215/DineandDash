@@ -1,7 +1,7 @@
-**Go Go Koog Time Platformer**
+**Dine and Dash Final Game**
 
-First level of a platformer where you fetch keys to beat the level. You can collect gems, too.
+Platformer where you eat food to stay alive. Keep eating food to add more time to your timer.
 
-Uses the starter code from Platform Improvement as a base.
+Uses code from the platformer assignment as a base.
 
 Visual and audio assets courtesy of [Kenny Assets](https://kenney.nl/assets), with gratitude.
