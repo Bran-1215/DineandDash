@@ -19,6 +19,11 @@ class Load extends Phaser.Scene {
             frameHeight: 18
         });
 
+        this.load.spritesheet("tilemap-food_sheet", "tilemap-food_packed.png", {
+            frameWidth: 18,
+            frameHeight: 18
+        });
+
         this.load.image("BGtilemap_tiles", "tilemap-backgrounds_packed.png"); 
         this.load.spritesheet("BGtilemap_sheet", "tilemap-backgrounds_packed.png", {
             frameWidth: 24,

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="180" height="25" tilewidth="18" tileheight="18" infinite="0" nextlayerid="18" nextobjectid="170">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="180" height="25" tilewidth="18" tileheight="18" infinite="0" nextlayerid="18" nextobjectid="171">
  <editorsettings>
   <export target="platformer-level-1.tmj" format="json"/>
  </editorsettings>

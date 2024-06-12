@@ -1,20 +1,21 @@
 class Platformer extends Phaser.Scene {
     constructor() {
         super("platformerScene");
-        
-        this.gemCount = 0;
+
+        this.foodScore = 0;
         this.playMode = false;
-        this.keyGet = false;
+        this.timeLimit = 200;
+        this.waveCount = 0;
     }
 
     init() {
         // variables and settings
         this.ACCELERATION = 200;
-        this.DRAG = 700;
+        this.DRAG = 900;
         this.physics.world.gravity.y = 900;
         this.JUMP_VELOCITY = -450;
         this.PARTICLE_VELOCITY = 50;
-        this.SCALE = 2.0;
+        this.SCALE = 1.0;
     }
 
     create() {
@@ -40,59 +41,123 @@ class Platformer extends Phaser.Scene {
             }
         });
 
+        // Time limit bar
+        this.timeBar = this.add.graphics();
+        this.drawBar();
+
 
         // set up player avatar
         // 1619 is the middle
         my.sprite.player = this.physics.add.sprite(150, 375, "platformer_characters", "tile_0000.png");
         my.sprite.player.setCollideWorldBounds(true);
 
+        // Setup Food
+        this.foodDistance1 = this.map.createFromObjects("Pizza1", {
+            name: "pizza1",
+            key: "tilemap-food_sheet",
+            frame: 106
+        });
+
+        this.foodDistance2 = this.map.createFromObjects("Pizza2", {
+            name: "pizza2",
+            key: "tilemap-food_sheet",
+            frame: 106
+        });
+
+        this.foodDistance3 = this.map.createFromObjects("Pizza3", {
+            name: "pizza3",
+            key: "tilemap-food_sheet",
+            frame: 106
+        });
+
+        this.foodBurger = this.map.createFromObjects("Burger", {
+            name: "burger",
+            key: "tilemap-food_sheet",
+            frame: 92
+        });
+
+        // Add the food objects to the group
+        this.foodGroup = this.add.group();
+
+        this.foodDistance1.forEach(food => {
+            this.foodGroup.add(food);
+        });
+
+        this.foodDistance2.forEach(food => {
+            this.foodGroup.add(food);
+        });
+
+        this.foodDistance3.forEach(food => {
+            this.foodGroup.add(food);
+        });
+
+        this.foodBurger.forEach(food => {
+            this.foodGroup.add(food);
+        });
+
         // Enable collision handling
         this.physics.add.collider(my.sprite.player, this.groundLayer);
         this.physics.add.collider(my.sprite.player, this.platformLayer);
 
+        this.physics.world.enable(this.foodDistance1, Phaser.Physics.Arcade.STATIC_BODY);
+        this.physics.world.enable(this.foodDistance2, Phaser.Physics.Arcade.STATIC_BODY);
+        this.physics.world.enable(this.foodDistance3, Phaser.Physics.Arcade.STATIC_BODY);
+        this.physics.world.enable(this.foodBurger, Phaser.Physics.Arcade.STATIC_BODY);
 
-        // set up Phaser-provided cursor key input
+        this.physics.add.overlap(my.sprite.player, this.foodGroup, (obj1, obj2) => {
+            if (obj2.visible) {
+                obj2.visible = false;
+                if (obj2.name == "burger") {
+                    this.sound.play("key");
+                    this.foodScore += 100;
+                    this.timeLimit += 100;
+                }
+                else {
+                    this.sound.play("gem");
+                this.foodScore += 20;
+                this.timeLimit += 20;
+                }
+                my.text.score.setText(this.foodScore);
+            }
+        });
+
+        this.spawnFood();
+
+
+        // Inputs
         cursors = this.input.keyboard.createCursorKeys();
-
         this.SpaceKey = this.input.keyboard.addKey('SPACE');
 
-        this.physics.world.drawDebug = false;
 
-        // TODO: Add movement vfx here
+        // Movement VFX
         my.vfx.walking = this.add.particles(0, 5, "kenny-particles", {
             frame: ['star_01.png'],
-            // TODO: Try: add random: true
-            scale: {start: 0.01, end: 0.04},
-            // TODO: Try: maxAliveParticles: 8,
+            scale: { start: 0.01, end: 0.04 },
             maxAliveParticles: 80,
             lifespan: 350,
-            // TODO: Try: gravityY: -400,
             gravityY: 10,
-            alpha: {start: 1, end: 0.1}, 
+            alpha: { start: 1, end: 0.1 },
         });
-
         my.vfx.jumping = this.add.particles(0, 5, "kenny-particles", {
             frame: ['star_09.png'],
-            // TODO: Try: add random: true
-            scale: {start: 0.1, end: 0.2},
-            // TODO: Try: maxAliveParticles: 8,
+            scale: { start: 0.1, end: 0.2 },
             maxAliveParticles: 80,
             lifespan: 350,
-            // TODO: Try: gravityY: -400,
             gravityY: 10,
-            alpha: {start: 1, end: 0.1}, 
+            alpha: { start: 1, end: 0.1 },
         });
-
         my.vfx.walking.stop();
         my.vfx.jumping.stop();
-        
 
-        // TODO: add camera code here
+
+        // Camera
         this.physics.world.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
         this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
-        this.cameras.main.startFollow(my.sprite.player, true, 0.25, 0.25); // (target, [,roundPixels][,lerpX][,lerpY])
+        this.cameras.main.startFollow(my.sprite.player, true, 0.25, 0.25);
         this.cameras.main.setDeadzone(50, 50);
         this.cameras.main.setZoom(this.SCALE);
+        this.physics.world.drawDebug = false;
+
 
         my.sprite.TitleScreen = this.add.sprite(360, 225, "Title");
         my.sprite.TitleScreen.scale = 0.5;
@@ -101,22 +166,41 @@ class Platformer extends Phaser.Scene {
         my.sprite.EndScreen.scale = 0.5;
         my.sprite.EndScreen.visible = false;
 
-        my.text.score = this.add.text(280, 120, this.gemCount, { fontSize: 36 , color: "black", fontweight: "bold"})
+        my.text.score = this.add.text(280, 120, this.foodScore, { fontSize: 36, color: "black", fontweight: "bold" })
         my.text.score.setStroke('black', 3);
         my.text.score.visible = false;
-        
+
 
 
     }
 
     update() {
-        if(cursors.left.isDown && this.playMode) {
+        if (this.playMode) {
+            this.timeLimit -= 0.065;
+            this.timeBar.setPosition(this.cameras.main.scrollX + 300, this.cameras.main.scrollY + 10);
+            this.drawBar();
+            if (this.allFoodEaten()) {
+                this.waveCount++;
+                this.spawnFood();
+
+            }
+
+        }
+
+        if (this.timeLimit < 0) {
+            this.timeLimit = 0;
+        }
+
+
+
+
+        if (cursors.left.isDown && this.playMode) {
             my.sprite.player.setAccelerationX(-this.ACCELERATION);
             my.sprite.player.resetFlip();
             my.sprite.player.anims.play('walk', true);
             // TODO: add particle following code here
 
-            my.vfx.walking.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
+            my.vfx.walking.startFollow(my.sprite.player, my.sprite.player.displayWidth / 2 - 10, my.sprite.player.displayHeight / 2 - 5, false);
 
             my.vfx.walking.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
 
@@ -127,13 +211,13 @@ class Platformer extends Phaser.Scene {
 
             }
 
-        } else if(cursors.right.isDown && this.playMode) {
+        } else if (cursors.right.isDown && this.playMode) {
             my.sprite.player.setAccelerationX(this.ACCELERATION);
             my.sprite.player.setFlip(true, false);
             my.sprite.player.anims.play('walk', true);
             // TODO: add particle following code here
 
-            my.vfx.walking.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
+            my.vfx.walking.startFollow(my.sprite.player, my.sprite.player.displayWidth / 2 - 10, my.sprite.player.displayHeight / 2 - 5, false);
 
             my.vfx.walking.setParticleSpeed(-this.PARTICLE_VELOCITY, 0);
 
@@ -153,37 +237,121 @@ class Platformer extends Phaser.Scene {
             // TODO: have the vfx stop playing
 
             my.vfx.walking.stop();
-            
+
         }
 
         // player jump
         // note that we need body.blocked rather than body.touching b/c the former applies to tilemap tiles and the latter to the "ground"
-        if(!my.sprite.player.body.blocked.down) {
+        if (!my.sprite.player.body.blocked.down) {
             my.sprite.player.anims.play('jump');
         }
-        if(my.sprite.player.body.blocked.down && Phaser.Input.Keyboard.JustDown(cursors.up) && this.playMode) {
+        if (my.sprite.player.body.blocked.down && Phaser.Input.Keyboard.JustDown(cursors.up) && this.playMode) {
             this.sound.play("jump");
             my.sprite.player.body.setVelocityY(this.JUMP_VELOCITY);
-            my.vfx.jumping.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
+            my.vfx.jumping.startFollow(my.sprite.player, my.sprite.player.displayWidth / 2 - 10, my.sprite.player.displayHeight / 2 - 5, false);
             my.vfx.jumping.start();
         } else {
             my.vfx.jumping.stop();
         }
 
-        if(Phaser.Input.Keyboard.JustDown(this.SpaceKey)) {
-            if(my.sprite.TitleScreen.visible) {
+        if (Phaser.Input.Keyboard.JustDown(this.SpaceKey)) {
+            if (my.sprite.TitleScreen.visible) {
                 my.sprite.TitleScreen.visible = false;
                 this.playMode = true;
+                my.sprite.player.setPosition(1619, 375);
             }
-            if(this.keyGet && my.sprite.EndScreen.visible) {
+            if (this.keyGet && my.sprite.EndScreen.visible) {
                 this.scene.restart();
                 my.sprite.TitleScreen.visible = false;
-                this.gemCount = 0;
-                this.keyGet = false;
-                //this.playMode = true;
+                this.foodScore = 0;
+                this.waveCount = 0;
             }
-            
+
         }
+    }
+
+    drawBar() {
+        // Clear the previous bar
+        this.timeBar.clear();
+
+        // Set the fill style to green (0x00ff00 is the hex color for green)
+        this.timeBar.fillStyle(0x00ff00);
+
+        // Draw the bar (x, y, width, height)
+        this.timeBar.fillRect(0, 0, this.timeLimit, 20);
+    }
+
+    spawnFood() {
+        let wave = this.waveCount;
+        this.timeLimit += 25;
+        if (wave >= 5) {
+            this.timeLimit += 25;
+        }
+        if (wave >= 10) {
+            this.timeLimit += 25;
+        }
+        console.log("wave: " + wave);
+
+        this.foodGroup.children.each(function (child) {
+            // Check if the child is visible
+            if (child.visible) {
+                // Set visibility to false
+                child.setVisible(false);
+            }
+        });
+
+        // Iterate through each child in the food group
+        this.foodGroup.children.each(function (child) {
+            // Check if the child is named "pizza1"
+            if (child.name === "pizza1") {
+                // Check if the child is visible
+                if (!child.visible) {
+                    // Set visibility to true for five random pizza items
+                    if (Math.random() < 0.7) {
+                        child.setVisible(true);
+                    }
+                }
+            }
+            if (child.name === "pizza2" && wave >= 2) {
+                // Check if the child is visible
+                if (!child.visible) {
+                    // Set visibility to true for five random pizza items
+                    if (Math.random() < 0.5) {
+                        child.setVisible(true);
+                    }
+                }
+            }
+            if (child.name === "pizza3" && wave >= 4) {
+                // Check if the child is visible
+                if (!child.visible) {
+                    // Set visibility to true for five random pizza items
+                    if (Math.random() < 0.3) {
+                        child.setVisible(true);
+                    }
+                }
+            }
+            if (child.name === "burger" && wave >= 6) {
+                // Check if the child is visible
+                if (!child.visible) {
+                    // Set visibility to true for five random pizza items
+                    if (Math.random() < 0.4) {
+                        child.setVisible(true);
+                    }
+                }
+            }
+        });
+    }
+
+    allFoodEaten() {
+        let allNotVisible = true;
+        this.foodGroup.children.each(function (child) {
+            if (child.visible) {
+                // If any child is found to be visible, exit the loop
+                allNotVisible = false;
+                return false;
+            }
+        });
+        return allNotVisible;
     }
 
 }
