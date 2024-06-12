@@ -29,6 +29,7 @@ class Platformer extends Phaser.Scene {
         this.platformLayer = this.map.createLayer("Platforms", this.tileset, 0, 0);
         this.terrainLayer = this.map.createLayer("Terrain", this.tileset, 0, 0);
 
+
         // Collisions for ground tiles and platform tiles
         this.groundLayer.forEachTile(tile => {
             if (tile.index !== -1) {
@@ -45,6 +46,7 @@ class Platformer extends Phaser.Scene {
         // set up player avatar
         my.sprite.player = this.physics.add.sprite(150, 375, "platformer_characters", "tile_0000.png");
         my.sprite.player.setCollideWorldBounds(true);
+
 
         // Setup Food
         this.foodDistance1 = this.map.createFromObjects("Pizza1", {
@@ -71,6 +73,7 @@ class Platformer extends Phaser.Scene {
             frame: 92
         });
 
+
         // Add the food objects to the group
         this.foodGroup = this.add.group();
 
@@ -89,6 +92,7 @@ class Platformer extends Phaser.Scene {
         this.foodBurger.forEach(food => {
             this.foodGroup.add(food);
         });
+
 
         // Enable collision handling
         this.physics.add.collider(my.sprite.player, this.groundLayer);
@@ -116,6 +120,7 @@ class Platformer extends Phaser.Scene {
                 my.text.scoreHUD.setText("Score:" + this.foodScore);
             }
         });
+
 
         // Begins Wave 1
         this.spawnFood();
@@ -156,6 +161,7 @@ class Platformer extends Phaser.Scene {
         this.cameras.main.setZoom(this.SCALE);
         this.physics.world.drawDebug = false;
 
+
         // HUD Elements
         this.timeBar = this.add.graphics();
         this.drawBar();
@@ -180,9 +186,6 @@ class Platformer extends Phaser.Scene {
 
         my.text.scoreHUD = this.add.text(0, 0, "Score:" + this.foodScore, { fontSize: 24, color: "black", fontweight: "bold" })
         my.text.scoreHUD.visible = false;
-
-
-
     }
 
     update() {
@@ -193,6 +196,9 @@ class Platformer extends Phaser.Scene {
         else {
             my.sprite.CreditScreen.visible = false;
         }
+
+
+        // When game is in play
         if (this.playMode) {
             // Time Limit Decay
             this.timeLimit -= 0.08;
@@ -215,6 +221,7 @@ class Platformer extends Phaser.Scene {
 
         }
 
+
         // Game ends when time limit reaches 0
         if (this.timeLimit < 0) {
             let gameOverNoise = true;
@@ -231,11 +238,11 @@ class Platformer extends Phaser.Scene {
             my.text.score.visible = true;
         }
 
+
         // Limit the time limit
         if (this.timeLimit > 350) {
             this.timeLimit = 350;
         }
-
 
 
         // Player Movement
@@ -267,6 +274,7 @@ class Platformer extends Phaser.Scene {
 
         }
 
+
         // Player Jump
         if (!my.sprite.player.body.blocked.down) {
             my.sprite.player.anims.play('jump');
@@ -279,6 +287,7 @@ class Platformer extends Phaser.Scene {
         } else {
             my.vfx.jumping.stop();
         }
+
 
         // Starting and Restarting the game using SPACE
         if (Phaser.Input.Keyboard.JustDown(this.SpaceKey)) {
@@ -321,12 +330,14 @@ class Platformer extends Phaser.Scene {
         }
         console.log("wave: " + wave);
 
+        
         // Hides each food item initially
         this.foodGroup.children.each(function (child) {
             if (child.visible) {
                 child.setVisible(false);
             }
         });
+
 
         // Randomly spawns food items, spawning further foods as the waves progress
         this.foodGroup.children.each(function (child) {
