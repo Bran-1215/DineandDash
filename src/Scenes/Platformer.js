@@ -41,13 +41,8 @@ class Platformer extends Phaser.Scene {
             }
         });
 
-        // Time limit bar
-        this.timeBar = this.add.graphics();
-        this.drawBar();
-
 
         // set up player avatar
-        // 1619 is the middle
         my.sprite.player = this.physics.add.sprite(150, 375, "platformer_characters", "tile_0000.png");
         my.sprite.player.setCollideWorldBounds(true);
 
@@ -158,6 +153,9 @@ class Platformer extends Phaser.Scene {
         this.cameras.main.setZoom(this.SCALE);
         this.physics.world.drawDebug = false;
 
+        // HUD Elements
+        this.timeBar = this.add.graphics();
+        this.drawBar();
 
         my.sprite.TitleScreen = this.add.sprite(360, 225, "Title");
         my.sprite.TitleScreen.scale = 0.5;
@@ -176,7 +174,7 @@ class Platformer extends Phaser.Scene {
 
     update() {
         if (this.playMode) {
-            this.timeLimit -= 0.065;
+            this.timeLimit -= 1.065;
             this.timeBar.setPosition(this.cameras.main.scrollX + 300, this.cameras.main.scrollY + 10);
             this.drawBar();
             if (this.allFoodEaten()) {
@@ -187,61 +185,52 @@ class Platformer extends Phaser.Scene {
 
         }
 
+        // Game ends when time limit reaches 0
         if (this.timeLimit < 0) {
-            this.timeLimit = 0;
+            let gameOverNoise = true;
+            if (gameOverNoise) {
+                this.sound.play("door");
+                gameOverNoise = false;
+            }
+            this.timeLimit = 1;
+            my.sprite.player.setPosition(150, 375);
+            this.playMode = false;
+            my.sprite.EndScreen.visible = true;
+            my.text.score.visible = true;
         }
 
 
 
-
+        // Player Movement
         if (cursors.left.isDown && this.playMode) {
             my.sprite.player.setAccelerationX(-this.ACCELERATION);
             my.sprite.player.resetFlip();
             my.sprite.player.anims.play('walk', true);
-            // TODO: add particle following code here
-
             my.vfx.walking.startFollow(my.sprite.player, my.sprite.player.displayWidth / 2 - 10, my.sprite.player.displayHeight / 2 - 5, false);
-
             my.vfx.walking.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
-
-            // Only play smoke effect if touching the ground
-
             if (my.sprite.player.body.blocked.down) {
                 my.vfx.walking.start();
 
             }
-
         } else if (cursors.right.isDown && this.playMode) {
             my.sprite.player.setAccelerationX(this.ACCELERATION);
             my.sprite.player.setFlip(true, false);
             my.sprite.player.anims.play('walk', true);
-            // TODO: add particle following code here
-
             my.vfx.walking.startFollow(my.sprite.player, my.sprite.player.displayWidth / 2 - 10, my.sprite.player.displayHeight / 2 - 5, false);
-
             my.vfx.walking.setParticleSpeed(-this.PARTICLE_VELOCITY, 0);
-
-            // Only play smoke effect if touching the ground
-
             if (my.sprite.player.body.blocked.down) {
                 my.vfx.walking.start();
 
             }
-
-
         } else {
-            // Set acceleration to 0 and have DRAG take over
             my.sprite.player.setAccelerationX(0);
             my.sprite.player.setDragX(this.DRAG);
             my.sprite.player.anims.play('idle');
-            // TODO: have the vfx stop playing
-
             my.vfx.walking.stop();
 
         }
 
-        // player jump
-        // note that we need body.blocked rather than body.touching b/c the former applies to tilemap tiles and the latter to the "ground"
+        // Player Jump
         if (!my.sprite.player.body.blocked.down) {
             my.sprite.player.anims.play('jump');
         }
@@ -254,17 +243,19 @@ class Platformer extends Phaser.Scene {
             my.vfx.jumping.stop();
         }
 
+        // Starting and Restarting the game using SPACE
         if (Phaser.Input.Keyboard.JustDown(this.SpaceKey)) {
             if (my.sprite.TitleScreen.visible) {
                 my.sprite.TitleScreen.visible = false;
                 this.playMode = true;
                 my.sprite.player.setPosition(1619, 375);
             }
-            if (this.keyGet && my.sprite.EndScreen.visible) {
+            if (my.sprite.EndScreen.visible) {
                 this.scene.restart();
                 my.sprite.TitleScreen.visible = false;
                 this.foodScore = 0;
                 this.waveCount = 0;
+                this.timeLimit = 200;
             }
 
         }
@@ -283,6 +274,7 @@ class Platformer extends Phaser.Scene {
 
     spawnFood() {
         let wave = this.waveCount;
+        // Completing waves gives more time the further the player is
         this.timeLimit += 25;
         if (wave >= 5) {
             this.timeLimit += 25;
@@ -292,48 +284,38 @@ class Platformer extends Phaser.Scene {
         }
         console.log("wave: " + wave);
 
+        // Hides each food item initially
         this.foodGroup.children.each(function (child) {
-            // Check if the child is visible
             if (child.visible) {
-                // Set visibility to false
                 child.setVisible(false);
             }
         });
 
-        // Iterate through each child in the food group
+        // Randomly spawns food items, spawning further foods as the waves progress
         this.foodGroup.children.each(function (child) {
-            // Check if the child is named "pizza1"
             if (child.name === "pizza1") {
-                // Check if the child is visible
                 if (!child.visible) {
-                    // Set visibility to true for five random pizza items
                     if (Math.random() < 0.7) {
                         child.setVisible(true);
                     }
                 }
             }
             if (child.name === "pizza2" && wave >= 2) {
-                // Check if the child is visible
                 if (!child.visible) {
-                    // Set visibility to true for five random pizza items
                     if (Math.random() < 0.5) {
                         child.setVisible(true);
                     }
                 }
             }
             if (child.name === "pizza3" && wave >= 4) {
-                // Check if the child is visible
                 if (!child.visible) {
-                    // Set visibility to true for five random pizza items
                     if (Math.random() < 0.3) {
                         child.setVisible(true);
                     }
                 }
             }
             if (child.name === "burger" && wave >= 6) {
-                // Check if the child is visible
                 if (!child.visible) {
-                    // Set visibility to true for five random pizza items
                     if (Math.random() < 0.4) {
                         child.setVisible(true);
                     }
@@ -346,7 +328,7 @@ class Platformer extends Phaser.Scene {
         let allNotVisible = true;
         this.foodGroup.children.each(function (child) {
             if (child.visible) {
-                // If any child is found to be visible, exit the loop
+                // If any food is found to be visible, exit the loop
                 allNotVisible = false;
                 return false;
             }
