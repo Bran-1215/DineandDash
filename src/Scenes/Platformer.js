@@ -10,7 +10,7 @@ class Platformer extends Phaser.Scene {
     init() {
         // variables and settings
         this.ACCELERATION = 200;
-        this.DRAG = 700;    // DRAG < ACCELERATION = icy slide
+        this.DRAG = 700;
         this.physics.world.gravity.y = 900;
         this.JUMP_VELOCITY = -450;
         this.PARTICLE_VELOCITY = 50;
@@ -18,144 +18,44 @@ class Platformer extends Phaser.Scene {
     }
 
     create() {
-        // Create a new tilemap game object which uses 18x18 pixel tiles, and is
-        // 45 tiles wide and 25 tiles tall.
+        // Creating Tilemap and layers
         this.map = this.add.tilemap("platformer-level-1", 18, 18, 160, 25);
-
-        // Add a tileset to the map
-        // First parameter: name we gave the tileset in Tiled
-        // Second parameter: key for the tilesheet (from this.load.image in Load.js)
         this.tileset = this.map.addTilesetImage("pixel_tilemap_packed", "tilemap_tiles");
         this.BGtileset = this.map.addTilesetImage("pixel_backgrounds_tilemap_packed", "BGtilemap_tiles");
 
-        // Create a layer
-        // this.groundLayer = this.map.createLayer("Ground-n-Platforms", this.tileset, 0, 0);
         this.backgroundLayer = this.map.createLayer("Background", this.BGtileset, 0, 0);
         this.groundLayer = this.map.createLayer("Ground", this.tileset, 0, 0);
         this.platformLayer = this.map.createLayer("Platforms", this.tileset, 0, 0);
         this.terrainLayer = this.map.createLayer("Terrain", this.tileset, 0, 0);
-        // Make it collidable
+
+        // Collisions for ground tiles and platform tiles
         this.groundLayer.forEachTile(tile => {
-            if (tile.index !== -1) { // Exclude empty tiles
-                // Only enable collision on the top side of the tile
+            if (tile.index !== -1) {
                 tile.setCollision(true, true, true, true);
             }
         });
-
         this.platformLayer.forEachTile(tile => {
-            if (tile.index !== -1) { // Exclude empty tiles
-                // Only enable collision on the top side of the tile
+            if (tile.index !== -1) {
                 tile.setCollision(false, false, true, false);
             }
         });
 
-        // TODO: Add createFromObjects here
-        // Find gems in the "Objects" layer in Phaser
-        // Look for them by finding objects with the name "gem"
-        // Assign the gem texture from the tilemap_sheet sprite sheet
-        // Phaser docs:
-        // https://newdocs.phaser.io/docs/3.80.0/focus/Phaser.Tilemaps.Tilemap-createFromObjects
-
 
         // set up player avatar
+        // 1619 is the middle
         my.sprite.player = this.physics.add.sprite(150, 375, "platformer_characters", "tile_0000.png");
         my.sprite.player.setCollideWorldBounds(true);
-
-        this.gems = this.map.createFromObjects("Gems", {
-            name: "gem",
-            key: "tilemap_sheet",
-            frame: 67
-        });
-
-        // Create a Phaser group out of the array this.gems
-        // This will be used for collision detection below.
-        this.gemGroup = this.add.group(this.gems);
-
-        // TODO: Add turn into Arcade Physics here
-        // Since createFromObjects returns an array of regular Sprites, we need to convert 
-        // them into Arcade Physics sprites (STATIC_BODY, so they don't move) 
-        this.physics.world.enable(this.gems, Phaser.Physics.Arcade.STATIC_BODY);
 
         // Enable collision handling
         this.physics.add.collider(my.sprite.player, this.groundLayer);
         this.physics.add.collider(my.sprite.player, this.platformLayer);
 
-        // TODO: Add gem collision handler
-        // Handle collision detection with gems
-        this.physics.add.overlap(my.sprite.player, this.gemGroup, (obj1, obj2) => {
-            this.sound.play("gem");
-            obj2.destroy();
-            this.gemCount++;
-            my.text.score.setText(this.gemCount);
-            console.log(this.gemCount);
-        });
-
-        this.doorKeyhole = this.map.createFromObjects("DoorKeyHole", {
-            name: "keyhole",
-            key: "tilemap_sheet",
-            frame: 28
-        });
-
-        this.door = this.map.createFromObjects("DoorKeyHole", {
-            name: "door",
-            key: "tilemap_sheet",
-            frame: 9
-        });
-
-        this.key = this.map.createFromObjects("Key", {
-            name: "key",
-            key: "tilemap_sheet",
-            frame: 27
-        });
-
-        this.exit = this.map.createFromObjects("Exit", {
-            name: "exit",
-            key: "tilemap_sheet",
-            frame: 87
-        });
-
-        this.doorGroup = this.add.group(this.door);
-
-        this.physics.world.enable(this.door, Phaser.Physics.Arcade.STATIC_BODY);
-        this.physics.world.enable(this.doorKeyhole, Phaser.Physics.Arcade.STATIC_BODY);
-        this.physics.world.enable(this.key, Phaser.Physics.Arcade.STATIC_BODY);
-        this.physics.world.enable(this.exit, Phaser.Physics.Arcade.STATIC_BODY);
-        this.physics.add.collider(my.sprite.player, this.door);
-
-        this.physics.add.overlap(my.sprite.player, this.key, (obj1, obj2) => {
-            this.sound.play("key");
-            obj2.destroy();
-            this.keyGet = true;
-        });
-
-        this.physics.add.overlap(my.sprite.player, this.doorKeyhole, (obj1, obj2) => {
-            if(this.keyGet) {
-                this.sound.play("door");
-                obj2.destroy();
-                this.doorGroup.children.each(door => {
-                    door.destroy();
-                });
-            }
-        });
-
-        this.physics.add.overlap(my.sprite.player, this.exit, (obj1, obj2) => {
-            this.sound.play("win");
-            obj2.destroy();
-            this.playMode = false;
-            my.sprite.EndScreen.visible = true;
-            my.text.score.visible = true;
-        });
 
         // set up Phaser-provided cursor key input
         cursors = this.input.keyboard.createCursorKeys();
 
         this.SpaceKey = this.input.keyboard.addKey('SPACE');
 
-        // debug key listener (assigned to D key)
-        // this.input.keyboard.on('keydown-D', () => {
-        //     this.physics.world.drawDebug = this.physics.world.drawDebug ? false : true
-        //     this.physics.world.debugGraphic.clear()
-        // }, this);
         this.physics.world.drawDebug = false;
 
         // TODO: Add movement vfx here
